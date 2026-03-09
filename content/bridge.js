@@ -35,35 +35,75 @@ window.__webmcpRegistry = window.__webmcpRegistry || {
  * Works on both the homepage and results pages.
  */
 function getPageContext() {
-  const ctx = {};
+  const ctx = { url: window.location.href };
 
-  // Homepage: the origin input has aria-label "Where from?" and a value
-  // Results page: the origin is in a readonly/disabled input or displayed chip
   const candidates = [
+    // 1. Standard input with "Where from?" aria-label
     () => {
       const el = document.querySelector('input[aria-label="Where from?"]');
       return el?.value?.trim() || null;
     },
+    // 2. Placeholder-based fallback
     () => {
-      // Fallback: any visible input near the search form whose placeholder is "Where from?"
       const el = document.querySelector('input[placeholder="Where from?"]');
       return el?.value?.trim() || null;
     },
+    // 3. Any input inside the origin combobox
     () => {
-      // Results page: origin shown as text in the top search bar
-      // Google Flights uses a div with the airport code/city that's not an input
-      const divs = Array.from(document.querySelectorAll('[aria-label*="From"]'));
-      for (const d of divs) {
-        const text = d.textContent?.trim();
-        if (text && text.length > 1 && text.length < 60) return text;
+      const el = document.querySelector('[data-placeholder="Where from?"] input') ||
+                 document.querySelector('[aria-label="Where from?"]');
+      if (el?.tagName === 'INPUT') return el.value?.trim() || null;
+      // If it's a div/combobox container, read its text
+      return el?.textContent?.trim() || null;
+    },
+    // 4. Results page: look for aria-label containing "from" on any element
+    () => {
+      const els = document.querySelectorAll('[aria-label*="from" i], [aria-label*="From"]');
+      for (const el of els) {
+        const label = el.getAttribute('aria-label') || '';
+        if (/where|from/i.test(label)) {
+          const text = el.value?.trim() || el.textContent?.trim();
+          if (text && text.length > 1 && text.length < 60) return text;
+        }
+      }
+      return null;
+    },
+    // 5. Results page URL: extract origin from ?q= parameter
+    () => {
+      const url = window.location.href;
+      // URL like: ?q=flights%20from%20SFO%20to%20...
+      const fromMatch = url.match(/from%20([A-Z]{3})/i) ||
+                        url.match(/from\+([A-Z]{3})/i) ||
+                        url.match(/from\s+([A-Z]{3})/i);
+      return fromMatch ? fromMatch[1].toUpperCase() : null;
+    },
+    // 6. Look for the first combobox-like container with airport code pattern
+    () => {
+      const inputs = document.querySelectorAll('input[type="text"]');
+      for (const input of inputs) {
+        const container = input.closest('[role="combobox"], [jscontroller]');
+        if (!container) continue;
+        const val = input.value?.trim();
+        // Check if this looks like an airport (has 3-letter code or city name)
+        if (val && val.length > 1 && val.length < 60) {
+          // Only return if it's the first/origin field (before destination)
+          const allComboboxes = document.querySelectorAll('[role="combobox"], [jscontroller]');
+          if (container === allComboboxes[0] || container === allComboboxes[1]) {
+            return val;
+          }
+        }
       }
       return null;
     }
   ];
 
   for (const fn of candidates) {
-    const val = fn();
-    if (val) { ctx.originText = val; break; }
+    try {
+      const val = fn();
+      if (val) { ctx.originText = val; break; }
+    } catch {
+      // Selector may throw — continue to next
+    }
   }
 
   return ctx;

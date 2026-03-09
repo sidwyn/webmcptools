@@ -43,7 +43,7 @@ const App = (() => {
 
   function updateToolUI() {
     const count = getActiveTools().length;
-    toolCount.textContent = count;
+    toolCount.textContent = count > 0 ? `${count} WebMCP Tools Connected` : '0 Tools';
     toolBadge.classList.toggle('has-tools', count > 0);
 
     // Settings tools list
@@ -548,6 +548,9 @@ const App = (() => {
           if (response?.tools) {
             registeredTools = response.tools;
             updateToolUI();
+          }
+          if (response?.pageContext) {
+            pageContext = response.pageContext;
           }
         });
       }

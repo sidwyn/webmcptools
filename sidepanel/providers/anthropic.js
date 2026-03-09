@@ -66,8 +66,11 @@ RULES:
     const convertedTools = tools.map(t => this.convertTool(t));
 
     let system = this.systemPrompt;
+    if (pageContext?.url) {
+      system += `\n\nCURRENT PAGE URL: ${pageContext.url}`;
+    }
     if (pageContext?.originText) {
-      system += `\n\nCURRENT PAGE CONTEXT: The user is on Google Flights with "${pageContext.originText}" already set as the origin. Do not ask where they are flying from — only ask for the destination and dates if needed.`;
+      system += `\nDETECTED ORIGIN: "${pageContext.originText}" is already set as the departure airport on the page. IMPORTANT: Use this as the origin for any flight search — do NOT ask the user where they are flying from. Just proceed with the search using this origin.`;
     }
 
     const body = {
