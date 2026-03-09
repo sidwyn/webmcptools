@@ -184,7 +184,37 @@ const App = (() => {
     const cursor = bubble.querySelector('.streaming-cursor');
     if (cursor) cursor.remove();
     if (bubble.dataset.raw) {
-      bubble.innerHTML = renderMarkdown(bubble.dataset.raw);
+      // Extract suggestion buttons: <<suggestion text>>
+      const raw = bubble.dataset.raw;
+      const suggestions = [];
+      const cleaned = raw.replace(/<<([^>]+)>>/g, (_, s) => {
+        suggestions.push(s.trim());
+        return '';
+      }).trimEnd();
+
+      bubble.innerHTML = renderMarkdown(cleaned);
+
+      // Render suggestion buttons after the bubble
+      if (suggestions.length > 0) {
+        const container = document.createElement('div');
+        container.className = 'suggestion-buttons';
+        for (const text of suggestions) {
+          const btn = document.createElement('button');
+          btn.className = 'suggestion-btn';
+          btn.textContent = text;
+          btn.addEventListener('click', () => {
+            // Remove all suggestion button groups when one is clicked
+            document.querySelectorAll('.suggestion-buttons').forEach(el => el.remove());
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            sendMessage(text);
+          });
+          container.appendChild(btn);
+        }
+        // Insert after the bubble's parent message div
+        bubble.closest('.message').appendChild(container);
+        scrollToBottom();
+      }
     }
   }
 

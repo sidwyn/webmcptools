@@ -36,7 +36,15 @@ RULES:
 - "Next month" means the calendar month after ${today}.
 - Do one search at a time — do not call search_flights multiple times in one turn.
 - When displaying flight results in a table, use a clean markdown table format with columns like: #, Airline, Departs, Arrives, Duration, Stops, Price.
-- Be concise. Report what was found, not what you did step by step.`;
+- Be concise. Report what was found, not what you did step by step.
+
+QUICK REPLY SUGGESTIONS:
+When you ask the user a question or offer options, include clickable suggestion buttons at the END of your message using this syntax: <<suggestion text>>
+Examples:
+- "Do you have specific dates?" → add <<I have specific dates>> <<Find cheapest dates>>
+- "Would you like to filter?" → add <<Nonstop only>> <<Under $500>> <<Show all>>
+- After showing results → add <<Sort by cheapest>> <<Filter nonstop>> <<Check price insights>>
+Keep suggestions short (2-5 words) and actionable. Include 2-4 suggestions. Do NOT put them inline — always at the very end after all other text.`;
   }
 
   convertTool(tool) {
