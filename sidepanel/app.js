@@ -439,6 +439,24 @@ const App = (() => {
       return;
     }
 
+    // If no tools connected, auto-navigate to Google Flights and wait for tools
+    if (getActiveTools().length === 0) {
+      statusText.textContent = 'Navigating to Google Flights...';
+      const navigated = await navigateToGoogleFlights();
+      if (navigated) {
+        // Wait for content script to load and register tools (poll up to 10s)
+        const toolsReady = await waitForTools(10000);
+        if (!toolsReady) {
+          addErrorMessage('Could not connect to Google Flights. Please refresh the page and try again.');
+          isStreaming = false;
+          sendBtn.disabled = false;
+          messageInput.disabled = false;
+          statusText.textContent = '';
+          return;
+        }
+      }
+    }
+
     // Refresh page context right before the agent runs
     pageContext = await fetchPageContext();
 
@@ -463,6 +481,28 @@ const App = (() => {
           resolve(response?.pageContext || {});
         });
       });
+    });
+  }
+
+  function navigateToGoogleFlights() {
+    return new Promise(resolve => {
+      chrome.runtime.sendMessage({ type: 'NAVIGATE_TAB', url: 'https://www.google.com/travel/flights' }, (response) => {
+        if (chrome.runtime.lastError) { resolve(false); return; }
+        resolve(response?.ok || false);
+      });
+    });
+  }
+
+  function waitForTools(timeout = 10000) {
+    return new Promise(resolve => {
+      if (getActiveTools().length > 0) { resolve(true); return; }
+      const start = Date.now();
+      const check = () => {
+        if (getActiveTools().length > 0) { resolve(true); return; }
+        if (Date.now() - start > timeout) { resolve(false); return; }
+        setTimeout(check, 500);
+      };
+      setTimeout(check, 1000);
     });
   }
 

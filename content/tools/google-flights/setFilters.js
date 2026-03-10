@@ -157,7 +157,7 @@ const SetFiltersTool = {
       const wantedAirlines = args.airlines.split(',').map(a => a.trim().toLowerCase());
       const opened = await openFilterPanel(['Airlines', 'Airline']);
       if (opened) {
-        await WebMCPHelpers.sleep(400);
+        await WebMCPHelpers.sleep(200);
 
         // Google Flights uses input[type="checkbox"] with label[for="id"].
         // Airlines are checked by default; alliances are unchecked.
@@ -182,13 +182,13 @@ const SetFiltersTool = {
             // Ensure it's checked
             if (!cb.checked) {
               WebMCPHelpers.simulateClick(label || cb);
-              await WebMCPHelpers.sleep(100);
+              await WebMCPHelpers.sleep(30);
             }
           } else {
             // Uncheck unwanted airlines
             if (cb.checked) {
               WebMCPHelpers.simulateClick(label || cb);
-              await WebMCPHelpers.sleep(100);
+              await WebMCPHelpers.sleep(30);
               unchecked++;
             }
           }
