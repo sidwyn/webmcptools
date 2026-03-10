@@ -57,6 +57,16 @@ const SearchFlightsTool = {
       return { content: [{ type: 'text', text: 'ERROR: departureDate must be in YYYY-MM-DD format.' }] };
     }
 
+    // Google Flights only supports searches up to ~11 months in the future
+    const today = new Date();
+    const maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + 11);
+    const depDate = new Date(departureDate);
+    if (depDate > maxDate) {
+      const maxStr = maxDate.toISOString().split('T')[0];
+      return { content: [{ type: 'text', text: `ERROR: Google Flights only allows searches up to about 11 months out. The latest searchable date is around ${maxStr}. Please choose an earlier date.` }] };
+    }
+
     // Build a natural language query URL — Google Flights handles this well
     const tripType = returnDate ? 'round trip' : 'one way';
     const cabinStr = cabinClass !== 'economy' ? ` ${cabinClass} class` : '';

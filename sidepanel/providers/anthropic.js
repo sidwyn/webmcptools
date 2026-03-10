@@ -74,6 +74,7 @@ RULES:
 - If you have 0 tools available, tell the user: "I'm not connected to Google Flights right now. Please make sure you're on google.com/travel/flights and reload the extension." Do NOT attempt to answer flight queries without tools.
 - Always use 3-letter IATA codes (SFO, JFK, LHR). For cities with multiple airports pick the primary one (NYC → JFK).
 - "Next month" means the calendar month after ${today}.
+- Google Flights only supports searches up to ~11 months in the future. If the user asks for dates beyond that, tell them the limitation and suggest the furthest available dates instead.
 - Do one search at a time — do not call search_flights multiple times in one turn.
 - When displaying flight results in a table, use a clean markdown table format with columns like: #, Airline, Departs, Arrives, Duration, Stops, Price.
 - Be concise. Report what was found, not what you did step by step.

@@ -91,7 +91,8 @@ const App = (() => {
   function renderMarkdown(text) {
     // Strip any raw JSON objects/arrays that the model may echo as text
     // (tool call inputs/outputs that shouldn't be shown to users)
-    let processed = text.replace(/^\s*\{[\s\S]*?\}\s*$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
+    let processed = text.replace(/^\s*\{[\s\S]*?\}\s*$/gm, '').replace(/\n{2,}/g, '\n\n').replace(/^\s*\n/gm, '').trim();
+    if (!processed) return '';
 
     // First extract code blocks to protect them
     const codeBlocks = [];
@@ -152,6 +153,12 @@ const App = (() => {
     for (let i = 0; i < tableBlocks.length; i++) {
       processed = processed.replace(`\x00TB${i}\x00`, tableBlocks[i]);
     }
+
+    // Remove empty paragraphs and excess line breaks
+    processed = processed
+      .replace(/<p>\s*<\/p>/g, '')
+      .replace(/(<br\s*\/?>){2,}/g, '<br>')
+      .replace(/<p>\s*<br\s*\/?>\s*<\/p>/g, '');
 
     return processed;
   }
@@ -551,9 +558,12 @@ const App = (() => {
         return;
       }
 
-      if (accumulatedText) {
+      if (accumulatedText && accumulatedText.trim()) {
         finalizeMessage(bubble);
         pushAssistantText(accumulatedText);
+      } else {
+        // Remove empty bubble
+        bubble.closest('.message')?.remove();
       }
 
       if (pendingToolCalls.length === 0) {
