@@ -688,6 +688,62 @@ const App = (() => {
         updateToolUI();
       }
     });
+
+    // Clear tools when user navigates away from Google Flights
+    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      if (changeInfo.url === undefined) return;
+      // Only care about the active tab
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (!tabs[0] || tabs[0].id !== tabId) return;
+        const isFlightsPage = changeInfo.url.includes('google.com/travel/flights') ||
+                              changeInfo.url.includes('google.com/travel/explore');
+        if (!isFlightsPage) {
+          // Navigated away — clear stale tools
+          registeredTools = [];
+          pageContext = {};
+          updateToolUI();
+        } else {
+          // Navigated to flights — re-fetch tools after content script loads
+          setTimeout(() => {
+            chrome.tabs.sendMessage(tabId, { type: 'GET_TOOLS' }, (response) => {
+              if (chrome.runtime.lastError) return;
+              if (response?.tools) {
+                registeredTools = response.tools;
+                updateToolUI();
+              }
+              if (response?.pageContext) {
+                pageContext = response.pageContext;
+              }
+            });
+          }, 1000);
+        }
+      });
+    });
+
+    // Also refresh tools when user switches tabs
+    chrome.tabs.onActivated.addListener(({ tabId }) => {
+      chrome.tabs.get(tabId, (tab) => {
+        if (chrome.runtime.lastError) return;
+        const isFlightsPage = tab.url?.includes('google.com/travel/flights') ||
+                              tab.url?.includes('google.com/travel/explore');
+        if (!isFlightsPage) {
+          registeredTools = [];
+          pageContext = {};
+          updateToolUI();
+        } else {
+          chrome.tabs.sendMessage(tabId, { type: 'GET_TOOLS' }, (response) => {
+            if (chrome.runtime.lastError) return;
+            if (response?.tools) {
+              registeredTools = response.tools;
+              updateToolUI();
+            }
+            if (response?.pageContext) {
+              pageContext = response.pageContext;
+            }
+          });
+        }
+      });
+    });
   }
 
   // ── Initialization ────────────────────────────────────────────────────────
