@@ -59,15 +59,19 @@ const SetFiltersTool = {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    // Open a filter panel by clicking its button
+    // Open a filter panel by clicking its button, then wait for checkboxes to appear
     async function openFilterPanel(labels) {
       for (const label of labels) {
         const btn = WebMCPHelpers.findByText(label, 'button') ||
                     WebMCPHelpers.findByAriaLabel(label);
         if (btn) {
           WebMCPHelpers.simulateClick(btn);
-          await WebMCPHelpers.sleep(500);
-          return true;
+          // Poll for checkboxes to appear (up to 3s) instead of fixed delay
+          for (let attempt = 0; attempt < 12; attempt++) {
+            await WebMCPHelpers.sleep(250);
+            if (document.querySelectorAll('input[type="checkbox"]').length > 0) return true;
+          }
+          return true; // panel opened even if no checkboxes found
         }
       }
       return false;
@@ -159,11 +163,19 @@ const SetFiltersTool = {
       if (opened) {
         await WebMCPHelpers.sleep(300);
 
+        // Match airline names flexibly: exact substring, word-start match, or first letters
+        function airlineMatches(name, wanted) {
+          // Direct substring match (either direction)
+          if (name.includes(wanted) || wanted.includes(name)) return true;
+          // Word-start match: "singapore" matches "singapore airlines"
+          const nameWords = name.split(/\s+/);
+          const wantedWords = wanted.split(/\s+/);
+          if (nameWords.some(w => wantedWords.some(ww => w.startsWith(ww) || ww.startsWith(w)))) return true;
+          return false;
+        }
+
         // Google Flights has an "Only" button next to each airline in the filter panel.
         // Clicking "Only" deselects all other airlines in one click — much faster.
-        // Strategy: find the airline row that matches, click its "Only" button.
-
-        // Build a map of airline rows: each <li> contains a checkbox, label, and "Only" button
         const checkboxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
         let clicked = false;
 
@@ -173,7 +185,7 @@ const SetFiltersTool = {
           if (!name || name.length < 2) continue;
           if (/^(oneworld|skyteam|star alliance)$/i.test(name)) continue;
 
-          const isWanted = wantedAirlines.some(a => name.includes(a) || a.includes(name));
+          const isWanted = wantedAirlines.some(a => airlineMatches(name, a));
           if (!isWanted) continue;
 
           // Find the "Only" button in this airline's row
@@ -206,7 +218,7 @@ const SetFiltersTool = {
             if (!name || name.length < 2) continue;
             if (/^(oneworld|skyteam|star alliance)$/i.test(name)) continue;
 
-            const isWanted = wantedAirlines.some(a => name.includes(a) || a.includes(name));
+            const isWanted = wantedAirlines.some(a => airlineMatches(name, a));
             if (isWanted) {
               found++;
               if (!cb.checked) { WebMCPHelpers.simulateClick(label || cb); await WebMCPHelpers.sleep(30); }
