@@ -109,14 +109,22 @@ const WebMCPHelpers = (() => {
   function findByText(text, tag = '*') {
     const elements = document.querySelectorAll(tag);
     const lower = text.toLowerCase();
+    // Prefer visible exact matches first, then invisible, then partial
+    let invisibleMatch = null;
     for (const el of elements) {
-      if (el.textContent.trim().toLowerCase() === lower) return el;
+      if (el.textContent.trim().toLowerCase() === lower) {
+        if (el.offsetHeight > 0 || el.offsetWidth > 0) return el;
+        if (!invisibleMatch) invisibleMatch = el;
+      }
     }
-    // Fallback: partial match
+    // Fallback: partial match on leaf nodes (prefer visible)
     for (const el of elements) {
-      if (el.textContent.toLowerCase().includes(lower) && el.children.length === 0) return el;
+      if (el.textContent.toLowerCase().includes(lower) && el.children.length === 0) {
+        if (el.offsetHeight > 0 || el.offsetWidth > 0) return el;
+        if (!invisibleMatch) invisibleMatch = el;
+      }
     }
-    return null;
+    return invisibleMatch;
   }
 
   /**
@@ -168,16 +176,20 @@ const WebMCPHelpers = (() => {
     const stops = stopsMatch ? stopsMatch[0] : null;
 
     // Airline: Google Flights renders airline names as class-less SPAN elements.
-    // Filter out airport codes (≤3 chars), prices, times, and airport full names.
+    // Must be visible, leaf nodes, not inside dialogs, and not match time/price/airport patterns.
     const airlineSpans = Array.from(card.querySelectorAll('span')).filter(el => {
-      if (el.className) return false; // has a class → not an airline span
+      if (el.className) return false;
+      if (el.children.length > 0) return false; // leaf nodes only
+      if (el.closest('[role="dialog"]')) return false; // skip tooltip/dialog text
+      if (el.offsetHeight === 0 && el.offsetWidth === 0) return false; // must be visible
       const t = el.textContent.trim();
-      return t.length > 3 &&
+      return t.length > 2 &&
         !t.startsWith('$') &&
         !/^\d/.test(t) &&
-        !/AM|PM/i.test(t) &&
+        !/\d\s*(AM|PM)/i.test(t) && // only filter AM/PM after digits (not "American")
         !/airport|international|terminal/i.test(t) &&
-        !/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/.test(t);
+        !/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/.test(t) &&
+        !/carry-on|checked bag|close dialog|additional fee/i.test(t);
     });
     const airline = airlineSpans.length > 0
       ? airlineSpans.map(s => s.textContent.trim()).filter((v, i, a) => a.indexOf(v) === i).join(', ')

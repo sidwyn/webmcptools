@@ -28,7 +28,7 @@ AVAILABLE TOOLS:
 MULTI-CITY: Call search_multi_city with all legs, then get_results.
 EXPLORE: Call explore_destinations with origin (and optionally month, tripLength) to navigate, then again without origin to read results.
 FLIGHT DETAILS: Call get_flight_details with rank number from get_results.
-BOOKING: Call get_booking_link with rank to get booking URLs. Always include the URL in your response.
+BOOKING: Google Flights shows booking options ONLY on the BOOKING PAGE (after selecting both departing and return flights). First use select_return_flight to select both legs, then call get_booking_link (no rank) on the booking page to read "Book with" options and prices. Tell the user to click "Continue" on the page.
 RETURN FLIGHTS: After selecting a departing flight, call select_return_flight to list/select returns.
 TRACKED FLIGHTS: ONLY when the user EXPLICITLY asks about tracked/saved flights. Call get_tracked_flights to navigate, then again to read. NEVER call this during a search or booking flow — it navigates away from results.
 

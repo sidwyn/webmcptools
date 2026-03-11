@@ -2,29 +2,97 @@
 
 const GetBookingLinkTool = {
   name: 'get_booking_link',
-  description: 'Get the booking link(s) for a specific flight result. Expands the flight card to find "Book on [airline]" links with prices from different booking sources (airline website, third-party sites like Expedia, Priceline, etc.).',
+  description: 'Get booking options and prices for a flight. On the BOOKING PAGE (after selecting both departing and return flights), reads the "Book with" options. On the RESULTS PAGE, expands a flight card to show the "Select flight" button. You must select both departing and return flights before booking options appear.',
   inputSchema: {
     type: 'object',
     properties: {
       rank: {
         type: 'integer',
-        description: '1-based rank of the flight result to get booking links for (from get_results)'
+        description: '1-based rank of the flight result to get booking info for (only used on results page, ignored on booking page)'
       }
-    },
-    required: ['rank']
+    }
   },
 
   execute: async (args) => {
     const { rank } = args;
+    const url = window.location.href;
+    const { simulateClick, sleep, findByText } = WebMCPHelpers;
 
-    if (!window.location.href.includes('google.com/travel/flights') ||
-        (!window.location.search.includes('q=') && !window.location.search.includes('tfs='))) {
-      return { content: [{ type: 'text', text: 'ERROR: Not on a Google Flights results page. Search for flights first.' }] };
+    // ── BOOKING PAGE: /travel/flights/booking ──────────────────────────────
+    if (url.includes('/travel/flights/booking')) {
+      await sleep(1000);
+
+      // Expand "more booking options" if present
+      const moreBtn = findByText('more booking options', 'button') ||
+                      findByText('more booking options');
+      if (moreBtn) {
+        simulateClick(moreBtn);
+        await sleep(1000);
+      }
+
+      // Parse all "Book with" sections
+      const allElements = Array.from(document.querySelectorAll('*'));
+      const bookingSections = allElements.filter(el => {
+        const text = el.textContent.trim();
+        return /^Book with /i.test(text) && el.children.length < 15 &&
+               el.offsetHeight > 0 && text.length < 200;
+      });
+
+      // Deduplicate: keep the most specific (smallest) container per source
+      const seen = new Map();
+      for (const el of bookingSections) {
+        const text = el.textContent.trim();
+        const sourceMatch = text.match(/^Book with (.+?)(?:\s|$)/i);
+        const source = sourceMatch ? sourceMatch[1].replace(/Airline$/, '').trim() : text.substring(0, 30);
+        const key = source.toLowerCase();
+        if (!seen.has(key) || el.textContent.length < seen.get(key).textContent.length) {
+          seen.set(key, el);
+        }
+      }
+
+      const options = [];
+      for (const [key, el] of seen) {
+        const text = el.textContent.trim();
+        const sourceMatch = text.match(/^Book with (.+?)(?:\s|$)/i);
+        const source = sourceMatch ? sourceMatch[1].replace(/Airline$/, '').trim() : key;
+        const priceMatch = text.match(/\$[\d,]+/);
+        options.push({ source, price: priceMatch ? priceMatch[0] : null });
+      }
+
+      if (options.length === 0) {
+        return { content: [{ type: 'text', text: 'On the booking page but could not find booking options. The page may still be loading.' }] };
+      }
+
+      // Get the total price shown at top
+      const totalMatch = document.body.innerText.match(/Lowest total price[\s\S]*?\$[\d,]+/i);
+      const totalPrice = totalMatch ? totalMatch[0].match(/\$[\d,]+/)?.[0] : null;
+
+      const summary = options.map((o, i) => {
+        let line = `${i + 1}. ${o.source}`;
+        if (o.price) line += ` — ${o.price}`;
+        return line;
+      }).join('\n');
+
+      const header = totalPrice ? `Lowest total price: ${totalPrice}\n\n` : '';
+
+      return {
+        content: [{
+          type: 'text',
+          text: `${header}Booking options:\n\n${summary}\n\nTo book, the user should click "Continue" next to their preferred option on the page.`
+        }]
+      };
     }
 
-    const { simulateClick, sleep } = WebMCPHelpers;
+    // ── RESULTS PAGE: expand card to show Select flight ────────────────────
+    if (!url.includes('google.com/travel/flights') ||
+        (!url.includes('q=') && !url.includes('tfs='))) {
+      return { content: [{ type: 'text', text: 'ERROR: Not on a Google Flights page. Search for flights first.' }] };
+    }
 
-    // Find flight cards
+    if (!rank) {
+      return { content: [{ type: 'text', text: 'ERROR: Provide a rank number. On the results page, booking options are only available after selecting both departing and return flights. Use select_return_flight to complete the selection first.' }] };
+    }
+
     let cards = Array.from(document.querySelectorAll('div.yR1fYc'));
     if (cards.length === 0) {
       const allDivs = Array.from(document.querySelectorAll('div'));
@@ -39,7 +107,6 @@ const GetBookingLinkTool = {
     if (cards.length === 0) {
       return { content: [{ type: 'text', text: 'No flight results found on the page.' }] };
     }
-
     if (rank < 1 || rank > cards.length) {
       return { content: [{ type: 'text', text: `Invalid rank ${rank}. There are ${cards.length} results (1-${cards.length}).` }] };
     }
@@ -61,72 +128,9 @@ const GetBookingLinkTool = {
       await sleep(1500);
     }
 
-    // Look for booking links — they contain "Book on" or "Book with" text
-    // and link to airline/OTA booking pages
-    const bookingLinks = [];
-
-    // Search in the expanded area (near the card)
-    const searchContainers = [
-      card.nextElementSibling,
-      card.parentElement,
-      card.parentElement?.parentElement,
-      card.parentElement?.parentElement?.parentElement
-    ].filter(Boolean);
-
-    for (const container of searchContainers) {
-      // Look for links with booking-related text
-      const links = Array.from(container.querySelectorAll('a[href]'));
-      for (const link of links) {
-        const text = link.textContent.trim();
-        const href = link.href;
-
-        // Match "Book on [airline]" or "Book with [OTA]" links
-        if (/book\s+(on|with)/i.test(text) || /select\s+flight/i.test(text)) {
-          const priceMatch = text.match(/\$[\d,]+/);
-          const sourceName = text.replace(/\$[\d,]+/g, '').replace(/book\s+(on|with)\s*/i, '').trim();
-          bookingLinks.push({
-            source: sourceName || 'Unknown',
-            price: priceMatch ? priceMatch[0] : null,
-            url: href
-          });
-        }
-      }
-
-      // Also look for buttons that lead to booking
-      const buttons = Array.from(container.querySelectorAll('button'));
-      for (const btn of buttons) {
-        const text = btn.textContent.trim();
-        if (/book\s+(on|with)/i.test(text) || /select\s+flight/i.test(text)) {
-          const priceMatch = text.match(/\$[\d,]+/);
-          const sourceName = text.replace(/\$[\d,]+/g, '').replace(/book\s+(on|with)\s*/i, '').trim();
-          bookingLinks.push({
-            source: sourceName || 'Unknown',
-            price: priceMatch ? priceMatch[0] : null,
-            url: null  // Button-based booking (no direct URL)
-          });
-        }
-      }
-
-      if (bookingLinks.length > 0) break;
-    }
-
-    // Fallback: look for any "Select flight" or booking-like button on page
-    if (bookingLinks.length === 0) {
-      // Google Flights sometimes shows a "Select flight" button that leads to booking options
-      const allLinks = Array.from(document.querySelectorAll('a[href*="book"], a[href*="airline"], a[href*="flights"]'));
-      for (const link of allLinks) {
-        const text = link.textContent.trim();
-        if (text.length < 3 || text.length > 100) continue;
-        if (/book|select|continue/i.test(text)) {
-          const priceMatch = text.match(/\$[\d,]+/);
-          bookingLinks.push({
-            source: text.replace(/\$[\d,]+/g, '').trim(),
-            price: priceMatch ? priceMatch[0] : null,
-            url: link.href
-          });
-        }
-      }
-    }
+    // Look for "Select flight" button in the expanded area
+    const selectBtn = findByText('Select flight', 'button');
+    const hasSelectBtn = selectBtn && selectBtn.offsetHeight > 0;
 
     // Collapse the card
     if (expandButton) {
@@ -134,35 +138,19 @@ const GetBookingLinkTool = {
       await sleep(300);
     }
 
-    if (bookingLinks.length === 0) {
+    if (hasSelectBtn) {
       return {
         content: [{
           type: 'text',
-          text: `No booking links found for flight #${rank}. On Google Flights, you typically need to select a flight and then choose a booking option on the next page. Try clicking the flight directly on the page to proceed to booking.`
+          text: `Flight #${rank} is ready to select. On Google Flights, booking options (airlines and OTAs with prices) appear on the BOOKING PAGE after selecting both departing and return flights.\n\nNext steps:\n1. Call select_return_flight to select this departing flight and choose a return\n2. After both flights are selected, Google Flights will show the booking page\n3. Then call get_booking_link (without rank) to read the booking options`
         }]
       };
     }
 
-    // Deduplicate by source name
-    const seen = new Set();
-    const unique = bookingLinks.filter(b => {
-      const key = b.source.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    const summary = unique.map((b, i) => {
-      let line = `${i + 1}. ${b.source}`;
-      if (b.price) line += ` — ${b.price}`;
-      if (b.url) line += `\n   Link: ${b.url}`;
-      return line;
-    }).join('\n');
-
     return {
       content: [{
         type: 'text',
-        text: `Booking options for flight #${rank}:\n\n${summary}`
+        text: `Could not find a "Select flight" button for flight #${rank}. Make sure you're on a results page with flight listings.`
       }]
     };
   }

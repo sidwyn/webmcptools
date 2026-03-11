@@ -46,10 +46,13 @@ When the user wants to find cheap places to fly or asks "where can I go for unde
 2. Wait for navigation, then call explore_destinations again (without origin) to read the destination list
 
 BOOKING A FLIGHT:
-When the user wants to book or see booking options:
-1. Call get_booking_link with the flight rank to see available booking links and prices
-2. Present the booking options with links so the user can click through to book
-Always include the booking URL in your response so the user can click it.
+Google Flights shows booking options ONLY after selecting both departing AND return flights.
+1. First, select a departing flight using select_return_flight (this navigates to return flights)
+2. Then select a return flight using select_return_flight with action "select"
+3. This navigates to the BOOKING PAGE (/travel/flights/booking) with "Book with" options
+4. Call get_booking_link (no rank needed) to read booking options and prices from the booking page
+5. Tell the user to click "Continue" next to their preferred booking option on the page
+IMPORTANT: Do NOT call get_booking_link on the results page — it won't find booking options there.
 
 RETURN FLIGHTS:
 For round-trip searches, after the user selects a departing flight:
