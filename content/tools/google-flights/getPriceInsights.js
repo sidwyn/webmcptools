@@ -2,7 +2,7 @@
 
 const GetPriceInsightsTool = {
   name: 'get_price_insights',
-  description: 'Read price insights for the current Google Flights search: whether prices are high/low/typical, the usual price range for this route, and a booking timing recommendation. Call this after get_results to give the user advice on when to buy.',
+  description: 'Read price insights and the Date Grid for the current search. Shows price level (high/low/typical), typical range, and the cheapest departure/return date combinations from the Date Grid. IMPORTANT: The Date Grid is only available on the departing flights page — call this BEFORE selecting any flight. If called on the return flights page, the Date Grid will not be available.',
   inputSchema: {
     type: 'object',
     properties: {}
@@ -39,10 +39,18 @@ const GetPriceInsightsTool = {
 
     // 4. Try to read Date Grid for cheapest dates (only available on departing flights page)
     let dateGridInfo = null;
-    const dateGridBtn = WebMCPHelpers.findByText('Date grid', 'button') ||
-                        WebMCPHelpers.findByText('Date grid') ||
-                        WebMCPHelpers.findByAriaLabel('Date grid');
-    if (dateGridBtn) {
+    // Detect if we're on the return flights page — Date Grid is not available there
+    const isReturnPage = !!document.querySelector('[class*="return"]') ||
+                         /returning|choose return|return to/i.test(document.body.innerText.substring(0, 500)) ||
+                         !!WebMCPHelpers.findByText('Top returning flights') ||
+                         !!WebMCPHelpers.findByText('Choose return');
+    const dateGridBtn = isReturnPage ? null :
+                        (WebMCPHelpers.findByText('Date grid', 'button') ||
+                         WebMCPHelpers.findByText('Date grid') ||
+                         WebMCPHelpers.findByAriaLabel('Date grid'));
+    if (isReturnPage) {
+      dateGridInfo = 'Date Grid is not available on the return flights page. To compare dates, use the Date Grid before selecting a departing flight.';
+    } else if (dateGridBtn) {
       WebMCPHelpers.simulateClick(dateGridBtn);
       await WebMCPHelpers.sleep(2000);
 
