@@ -35,7 +35,22 @@ const WebMCPHelpers = (() => {
   async function waitForGoogleFlightsResults(timeout = 20000) {
     const start = Date.now();
 
-    await sleep(2000); // Give the SPA time to start loading
+    function hasResults() {
+      if (document.querySelectorAll('div.yR1fYc').length > 0) return true;
+      return Array.from(document.querySelectorAll('div')).some(el => {
+        if (el.children.length < 3) return false;
+        const text = el.textContent;
+        return /\$[\d,]+/.test(text) && /\d{1,2}:\d{2}\s*(AM|PM)/i.test(text) &&
+               /(nonstop|\d+\s+stop)/i.test(text);
+      });
+    }
+
+    // If results are already on the page, return immediately
+    if (hasResults()) return true;
+
+    // Brief wait for SPA navigation to start, then poll quickly
+    await sleep(500);
+    if (hasResults()) return true;
 
     // Wait for loading indicators to disappear
     const loadingSelectors = [
@@ -45,36 +60,22 @@ const WebMCPHelpers = (() => {
     ];
 
     for (const selector of loadingSelectors) {
+      if (Date.now() - start > timeout) break;
       try {
-        await waitForElementToDisappear(selector, Math.min(10000, timeout - (Date.now() - start)));
+        await waitForElementToDisappear(selector, Math.min(5000, timeout - (Date.now() - start)));
       } catch {
         // May not be present — continue
       }
     }
 
-    // Wait for flight result cards to appear.
-    // Primary: div.yR1fYc (verified selector for Google Flights flight cards)
-    // Fallback: structural check for divs containing price + time
+    // Poll for results at 200ms intervals
     return new Promise(resolve => {
       const check = () => {
-        // Primary selector
-        if (document.querySelectorAll('div.yR1fYc').length > 0) {
-          resolve(true);
-          return;
-        }
-        // Fallback: any div with price + departure time pattern
-        const hasResults = Array.from(document.querySelectorAll('div')).some(el => {
-          if (el.children.length < 3) return false;
-          const text = el.textContent;
-          return /\$[\d,]+/.test(text) && /\d{1,2}:\d{2}\s*(AM|PM)/i.test(text) &&
-                 /(nonstop|\d+\s+stop)/i.test(text);
-        });
-        if (hasResults) { resolve(true); return; }
-
+        if (hasResults()) { resolve(true); return; }
         if (Date.now() - start > timeout) { resolve(false); return; }
-        setTimeout(check, 500);
+        setTimeout(check, 200);
       };
-      setTimeout(check, 500);
+      check();
     });
   }
 

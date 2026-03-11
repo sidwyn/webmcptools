@@ -37,9 +37,10 @@ const GetPriceInsightsTool = {
       insights.currentNote = currentNoteMatch[2].toLowerCase();
     }
 
-    // 4. Try to read Date Grid for cheapest dates
+    // 4. Try to read Date Grid for cheapest dates (only available on departing flights page)
     let dateGridInfo = null;
-    const dateGridBtn = WebMCPHelpers.findByText('Date grid') ||
+    const dateGridBtn = WebMCPHelpers.findByText('Date grid', 'button') ||
+                        WebMCPHelpers.findByText('Date grid') ||
                         WebMCPHelpers.findByAriaLabel('Date grid');
     if (dateGridBtn) {
       WebMCPHelpers.simulateClick(dateGridBtn);
