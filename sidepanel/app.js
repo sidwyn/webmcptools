@@ -40,7 +40,32 @@ const App = (() => {
     const verb = getStatusVerb(toolName);
     const icons = ['✈️', '🌍', '🗺️', '🧳', '🛫', '🎫', '🏝️', '⛅'];
     const icon = icons[Math.floor(Math.random() * icons.length)];
-    statusText.innerHTML = `<span class="status-icon">${icon}</span> ${verb}...`;
+    showInlineStatus(`<span class="status-icon">${icon}</span> ${verb}...`);
+  }
+
+  // Inline status shown inside the messages area (visible to user while scrolling)
+  let inlineStatusEl = null;
+
+  function showInlineStatus(html) {
+    if (!inlineStatusEl) {
+      inlineStatusEl = document.createElement('div');
+      inlineStatusEl.className = 'inline-status';
+    }
+    inlineStatusEl.innerHTML = html;
+    // Always append at the end of messages so it appears below the last tool card
+    if (!inlineStatusEl.parentElement || inlineStatusEl.parentElement !== messagesEl) {
+      messagesEl.appendChild(inlineStatusEl);
+    }
+    // Also keep footer status in sync for accessibility
+    statusText.innerHTML = html;
+    scrollToBottom();
+  }
+
+  function clearInlineStatus() {
+    if (inlineStatusEl && inlineStatusEl.parentElement) {
+      inlineStatusEl.remove();
+    }
+    clearInlineStatus();
   }
 
   // DOM refs
@@ -423,7 +448,7 @@ const App = (() => {
 
     messageInput.value = '';
     messageInput.style.height = 'auto';
-    statusText.innerHTML = '';
+    clearInlineStatus();
     messageInput.focus();
   }
 
@@ -588,7 +613,7 @@ const App = (() => {
 
     // If no tools connected, try to navigate to a supported site and wait
     if (getActiveTools().length === 0) {
-      statusText.innerHTML = '<span class="status-icon">🛫</span> Navigating to supported site...';
+      showInlineStatus('<span class="status-icon">🛫</span> Navigating to supported site...');
       const navigated = await navigateToDefaultSite();
       if (navigated) {
         const toolsReady = await waitForTools(10000);
@@ -597,7 +622,7 @@ const App = (() => {
           isStreaming = false;
           sendBtn.disabled = false;
           messageInput.disabled = false;
-          statusText.innerHTML = '';
+          clearInlineStatus();
           return;
         }
       }
@@ -620,7 +645,7 @@ const App = (() => {
     isStreaming = false;
     sendBtn.disabled = false;
     messageInput.disabled = false;
-    statusText.innerHTML = '';
+    clearInlineStatus();
     // Delay focus slightly to ensure the browser processes the disabled=false change
     setTimeout(() => messageInput.focus(), 50);
   }
@@ -777,7 +802,7 @@ const App = (() => {
       const thinkVerb = thinkingVerbs[Math.floor(Math.random() * thinkingVerbs.length)];
       const thinkIcons = ['✈️', '🌍', '🗺️', '🧳'];
       const thinkIcon = thinkIcons[Math.floor(Math.random() * thinkIcons.length)];
-      statusText.innerHTML = `<span class="status-icon">${thinkIcon}</span> ${thinkVerb}...`;
+      showInlineStatus(`<span class="status-icon">${thinkIcon}</span> ${thinkVerb}...`);
 
       const bubble = createAssistantMessage();
       let accumulatedText = '';

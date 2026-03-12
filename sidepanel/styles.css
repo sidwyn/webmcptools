@@ -712,6 +712,22 @@ body {
   100% { transform: translateY(-2px); }
 }
 
+/* Inline status shown inside messages area */
+.inline-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 4px 0;
+}
+
+.inline-status .status-icon {
+  display: inline-block;
+  animation: statusBounce 0.6s ease-in-out infinite alternate;
+}
+
 .token-display {
   font-size: 11px;
   color: var(--text-muted);
