@@ -40,7 +40,7 @@ const App = (() => {
     const verb = getStatusVerb(toolName);
     const icons = ['✈️', '🌍', '🗺️', '🧳', '🛫', '🎫', '🏝️', '⛅'];
     const icon = icons[Math.floor(Math.random() * icons.length)];
-    showInlineStatus(`<span class="status-icon">${icon}</span> ${verb}...`);
+    showInlineStatus(`<span class="status-icon">${icon}</span> ${verb}<span class="animated-dots"></span>`);
   }
 
   // Inline status shown inside the messages area (visible to user while scrolling)
@@ -54,7 +54,6 @@ const App = (() => {
     inlineStatusEl.innerHTML = html;
     // Always re-append so it's the last child (below the latest tool card)
     messagesEl.appendChild(inlineStatusEl);
-    statusText.innerHTML = html;
     scrollToBottom();
   }
 
@@ -62,7 +61,6 @@ const App = (() => {
     if (inlineStatusEl && inlineStatusEl.parentElement) {
       inlineStatusEl.remove();
     }
-    statusText.innerHTML = '';
   }
 
   // DOM refs
@@ -615,7 +613,7 @@ const App = (() => {
 
     // If no tools connected, try to navigate to a supported site and wait
     if (getActiveTools().length === 0) {
-      showInlineStatus('<span class="status-icon">🛫</span> Navigating to supported site...');
+      showInlineStatus('<span class="status-icon">🛫</span> Navigating to supported site<span class="animated-dots"></span>');
       const navigated = await navigateToDefaultSite();
       if (navigated) {
         const toolsReady = await waitForTools(10000);
@@ -805,7 +803,7 @@ const App = (() => {
       const thinkVerb = thinkingVerbs[Math.floor(Math.random() * thinkingVerbs.length)];
       const thinkIcons = ['✈️', '🌍', '🗺️', '🧳'];
       const thinkIcon = thinkIcons[Math.floor(Math.random() * thinkIcons.length)];
-      showInlineStatus(`<span class="status-icon">${thinkIcon}</span> ${thinkVerb}...`);
+      showInlineStatus(`<span class="status-icon">${thinkIcon}</span> ${thinkVerb}<span class="animated-dots"></span>`);
 
       const bubble = createAssistantMessage();
       let accumulatedText = '';
@@ -820,6 +818,7 @@ const App = (() => {
           pageContext,
           {
             onToken: (token) => {
+              if (!accumulatedText) clearInlineStatus();
               accumulatedText += token;
               appendToken(bubble, token);
             },

@@ -709,11 +709,7 @@ body {
 }
 
 .status-text {
-  font-size: 12px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: none;
 }
 
 .status-text .status-icon {
@@ -740,6 +736,18 @@ body {
 .inline-status .status-icon {
   display: inline-block;
   animation: statusBounce 0.6s ease-in-out infinite alternate;
+}
+
+.animated-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0%  { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
 }
 
 .token-display {
