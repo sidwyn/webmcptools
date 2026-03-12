@@ -52,11 +52,8 @@ const App = (() => {
       inlineStatusEl.className = 'inline-status';
     }
     inlineStatusEl.innerHTML = html;
-    // Always append at the end of messages so it appears below the last tool card
-    if (!inlineStatusEl.parentElement || inlineStatusEl.parentElement !== messagesEl) {
-      messagesEl.appendChild(inlineStatusEl);
-    }
-    // Also keep footer status in sync for accessibility
+    // Always re-append so it's the last child (below the latest tool card)
+    messagesEl.appendChild(inlineStatusEl);
     statusText.innerHTML = html;
     scrollToBottom();
   }
@@ -65,7 +62,7 @@ const App = (() => {
     if (inlineStatusEl && inlineStatusEl.parentElement) {
       inlineStatusEl.remove();
     }
-    clearInlineStatus();
+    statusText.innerHTML = '';
   }
 
   // DOM refs
