@@ -30,6 +30,7 @@ Want to add a site? See [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Programmatic content scripts** — sites register dynamically, no manifest changes needed per site
 - **Multi-model** — works with Claude (Anthropic) or GPT-4o (OpenAI)
 - **Conversation persistence** — chat history preserved across navigation
+- **Smart rate limit handling** — automatic retry with exponential backoff and cancel button on API rate limits
 - **Dark mode** — adapts to system theme
 
 ### Google Flights Module

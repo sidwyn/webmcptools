@@ -121,6 +121,9 @@ const App = (() => {
       return `\x00TB${idx}\x00`;
     });
 
+    // Horizontal rules
+    processed = processed.replace(/^---+$/gm, '<hr>');
+
     // Headings (### before ## before #)
     processed = processed
       .replace(/^###\s+(.+)$/gm, '<h3>$1</h3>')
@@ -618,9 +621,52 @@ const App = (() => {
     });
   }
 
+  // ── Rate Limit Retry ──────────────────────────────────────────────────────
+
+  let retryCancelled = false;
+
+  function showRetryCountdown(waitSeconds) {
+    retryCancelled = false;
+    return new Promise(resolve => {
+      const el = document.createElement('div');
+      el.className = 'retry-banner';
+      el.innerHTML = `
+        <span class="retry-text">Rate limited. Retrying in <strong class="retry-countdown">${waitSeconds}</strong>s...</span>
+        <button class="retry-cancel-btn">Cancel</button>
+      `;
+
+      const countdownEl = el.querySelector('.retry-countdown');
+      const cancelBtn = el.querySelector('.retry-cancel-btn');
+
+      cancelBtn.addEventListener('click', () => {
+        retryCancelled = true;
+        clearInterval(timer);
+        el.remove();
+        resolve(false);
+      });
+
+      messagesEl.appendChild(el);
+      scrollToBottom();
+
+      let remaining = waitSeconds;
+      const timer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(timer);
+          el.remove();
+          resolve(true);
+        } else {
+          countdownEl.textContent = remaining;
+        }
+      }, 1000);
+    });
+  }
+
   async function runAgentLoop(provider, targetTabId) {
     let iteration = 0;
     const maxIterations = 10;
+    let retryCount = 0;
+    const MAX_RETRIES = 4;
 
     while (iteration < maxIterations) {
       iteration++;
@@ -658,10 +704,36 @@ const App = (() => {
       });
 
       if (streamError) {
-        finalizeMessage(bubble);
+        // Clean up empty bubble
+        if (!accumulatedText || !accumulatedText.trim()) {
+          bubble.closest('.message')?.remove();
+        } else {
+          finalizeMessage(bubble);
+          pushAssistantText(accumulatedText);
+        }
+
+        // Rate limit: retry with exponential backoff
+        if (streamError.isRateLimit && retryCount < MAX_RETRIES) {
+          retryCount++;
+          const baseWait = streamError.retryAfter || 30;
+          const waitSeconds = Math.min(baseWait * Math.pow(2, retryCount - 1), 300);
+
+          const shouldRetry = await showRetryCountdown(waitSeconds);
+          if (shouldRetry && !retryCancelled) {
+            iteration--; // Retry the same iteration
+            continue;
+          }
+          // Cancelled — fall through to show a friendly message
+          addErrorMessage('Request cancelled. Try again when ready.');
+          return;
+        }
+
         addErrorMessage(`Error: ${streamError.message}`);
         return;
       }
+
+      // Reset retry count on success
+      retryCount = 0;
 
       if (accumulatedText && accumulatedText.trim()) {
         finalizeMessage(bubble);

@@ -538,6 +538,13 @@ body {
   border-radius: var(--radius-sm);
 }
 
+/* Horizontal rules in assistant messages */
+.message.assistant .message-bubble hr {
+  border: none;
+  border-top: 1px solid var(--border-light);
+  margin: 12px 0;
+}
+
 /* Error message */
 .error-message {
   padding: 10px 14px;
@@ -547,6 +554,47 @@ body {
   color: var(--error);
   font-size: 13.5px;
   margin-bottom: 12px;
+}
+
+/* Rate limit retry banner */
+.retry-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
+.retry-text {
+  font-size: 13.5px;
+  color: var(--warning);
+}
+
+.retry-countdown {
+  font-variant-numeric: tabular-nums;
+}
+
+.retry-cancel-btn {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warning);
+  background: transparent;
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.retry-cancel-btn:hover {
+  background: var(--warning);
+  color: white;
 }
 
 /* Input Area */

@@ -109,7 +109,12 @@ Keep suggestions short (2-5 words) and actionable. Include 2-4 suggestions. Alwa
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      onError(new Error(err.error?.message || `API error ${response.status}`));
+      const error = new Error(err.error?.message || `API error ${response.status}`);
+      if (response.status === 429) {
+        error.isRateLimit = true;
+        error.retryAfter = parseInt(response.headers.get('retry-after'), 10) || 30;
+      }
+      onError(error);
       return;
     }
 

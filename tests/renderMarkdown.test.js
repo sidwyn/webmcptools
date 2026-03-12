@@ -49,6 +49,9 @@ function renderMarkdown(text) {
     return `\x00TB${idx}\x00`;
   });
 
+  // Horizontal rules
+  processed = processed.replace(/^---+$/gm, '<hr>');
+
   processed = processed
     .replace(/^###\s+(.+)$/gm, '<h3>$1</h3>')
     .replace(/^##\s+(.+)$/gm, '<h2>$1</h2>')
@@ -137,6 +140,25 @@ describe('renderMarkdown tables', () => {
     expect(result).toContain('<table');
     expect(result).toContain('<th>A</th>');
     expect(result).toContain('<td>1</td>');
+  });
+});
+
+describe('renderMarkdown horizontal rules', () => {
+  it('renders --- as <hr>', () => {
+    const result = renderMarkdown('Above\n\n---\n\nBelow');
+    expect(result).toContain('<hr>');
+    expect(result).toContain('Above');
+    expect(result).toContain('Below');
+  });
+
+  it('renders longer dashes as <hr>', () => {
+    const result = renderMarkdown('-----');
+    expect(result).toContain('<hr>');
+  });
+
+  it('does not render mid-line --- as <hr>', () => {
+    const result = renderMarkdown('some --- text');
+    expect(result).not.toContain('<hr>');
   });
 });
 
