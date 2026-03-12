@@ -40,10 +40,11 @@ const GetPriceInsightsTool = {
     // 4. Try to read Date Grid for cheapest dates (only available on departing flights page)
     let dateGridInfo = null;
     // Detect if we're on the return flights page — Date Grid is not available there
-    const isReturnPage = !!document.querySelector('[class*="return"]') ||
-                         /returning|choose return|return to/i.test(document.body.innerText.substring(0, 500)) ||
+    const topText = document.body.innerText.substring(0, 1000);
+    const isReturnPage = /returning flights|choose return|return to|top returning/i.test(topText) ||
                          !!WebMCPHelpers.findByText('Top returning flights') ||
-                         !!WebMCPHelpers.findByText('Choose return');
+                         !!WebMCPHelpers.findByText('Choose return') ||
+                         !!document.querySelector('a[aria-label*="change departing flight"]');
     const dateGridBtn = isReturnPage ? null :
                         (WebMCPHelpers.findByText('Date grid', 'button') ||
                          WebMCPHelpers.findByText('Date grid') ||
