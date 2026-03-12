@@ -15,6 +15,7 @@ RULES:
 - "Next month" means the calendar month after ${today}.
 - Google Flights only supports searches up to ~11 months in the future. If the user asks for dates beyond that, tell them and suggest the furthest available dates instead.
 - Do one search at a time.
+- ALWAYS default to round-trip unless the user explicitly says "one way" or "one-way". Never assume one-way.
 - When displaying flight results in a table, use a clean markdown table format.
 - Be concise.
 - NEVER output raw JSON, tool names, function arguments, or internal details in your text responses. The user should only see natural language and formatted tables.
@@ -38,12 +39,13 @@ Keep suggestions short (2-5 words) and actionable. Include 2-4 suggestions. Alwa
     }
     if (this.userPreferences && Object.keys(this.userPreferences).length > 0) {
       const prefLines = [];
-      const labels = { priority: 'Priority', cabin: 'Cabin class', bags: 'Bags', stops: 'Stops' };
+      const labels = { priority: 'Priority', cabin: 'Cabin class', bags: 'Bags', stops: 'Stops', tripType: 'Trip type' };
       const valueLabels = {
         price: 'lowest price', direct: 'direct/nonstop flights', duration: 'shortest duration', schedule: 'best schedule',
         economy: 'Economy', premium_economy: 'Premium Economy', business: 'Business', first: 'First',
         carry_on: 'carry-on only', checked_1: '1 checked bag', checked_2: '2 checked bags',
-        any: 'any number of stops', nonstop: 'nonstop only', '1_or_fewer': '1 stop or fewer'
+        any: 'any number of stops', nonstop: 'nonstop only', '1_or_fewer': '1 stop or fewer',
+        round_trip: 'round trip (always use round trip unless user says one-way)', one_way: 'one way'
       };
       for (const [key, value] of Object.entries(this.userPreferences)) {
         if (labels[key]) prefLines.push(`- ${labels[key]}: ${valueLabels[value] || value}`);
