@@ -682,8 +682,9 @@ const App = (() => {
     return new Promise(resolve => {
       chrome.runtime.sendMessage({ type: 'GET_SITE_MODULES' }, (response) => {
         if (chrome.runtime.lastError || !response?.siteModules?.length) { resolve(false); return; }
-        // Use the first match pattern, stripped of wildcard
-        const firstUrl = response.siteModules[0].matches[0].replace(/\*$/, '');
+        // Use defaultUrl if provided (avoids redirects like /flights → /flights/saves)
+        const mod = response.siteModules[0];
+        const firstUrl = mod.defaultUrl || mod.matches[0].replace(/\*$/, '');
         registeredSitePatterns = response.siteModules.flatMap(m => m.matches);
         chrome.runtime.sendMessage({ type: 'NAVIGATE_TAB', url: firstUrl }, (navResponse) => {
           if (chrome.runtime.lastError) { resolve(false); return; }

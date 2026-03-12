@@ -7,6 +7,7 @@
 const SITE_MODULES = [
   {
     id: 'google-flights',
+    defaultUrl: 'https://www.google.com/travel/flights/search',
     matches: [
       'https://www.google.com/travel/flights*',
       'https://www.google.com/travel/explore*'
