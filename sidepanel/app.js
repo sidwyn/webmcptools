@@ -189,11 +189,16 @@ const App = (() => {
     // Inline formatting
     processed = processed
       .replace(/`([^`]+)`/g, (_, code) => `<code>${escapeHtml(code)}</code>`)
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>')
-      .replace(/^/, '<p>')
-      .replace(/$/, '</p>');
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+    // Wrap non-block lines in <p> tags (skip headings, hrs, and placeholders)
+    processed = processed.split('\n\n').map(block => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      if (/^<(h[1-6]|hr|div|pre|table)/.test(trimmed)) return trimmed;
+      if (/^\x00/.test(trimmed)) return trimmed; // code/table placeholder
+      return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
+    }).join('\n');
 
     // Restore code blocks and tables
     for (let i = 0; i < codeBlocks.length; i++) {

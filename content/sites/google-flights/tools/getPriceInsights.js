@@ -176,42 +176,26 @@ const GetPriceInsightsTool = {
         return false;
       }
 
-      // Step 1: Scrape the initial view
+      // Scrape the initial view
       scrapePriceCells();
 
-      // Step 2: Navigate departure axis (columns) — go backward first, then forward
-      // Go backward up to 2 pages to catch earlier dates in the month
+      // Navigate forward through the departure axis to cover more dates
+      // Keep it light — 2 forward pages is enough to cover ~3 weeks beyond current view
       for (let i = 0; i < 2; i++) {
-        const moved = await clickDepartureNav('back');
-        if (!moved) break;
-        scrapePriceCells();
-      }
-
-      // Return to start position and go forward through the month
-      // (re-scrape each view since forward pages overlap)
-      for (let i = 0; i < 4; i++) {
         const moved = await clickDepartureNav('forward');
         if (!moved) break;
         scrapePriceCells();
       }
 
-      // Step 3: Navigate return axis (rows) — scroll down to see more return dates
-      for (let i = 0; i < 3; i++) {
-        const moved = await clickReturnNav('forward');
-        if (!moved) break;
+      // One page forward on the return axis, then re-scan departure
+      const returnMoved = await clickReturnNav('forward');
+      if (returnMoved) {
         scrapePriceCells();
-
-        // Also scan departure axis at this return offset
-        for (let j = 0; j < 2; j++) {
-          const depMoved = await clickDepartureNav('back');
-          if (!depMoved) break;
-          scrapePriceCells();
-        }
-        for (let j = 0; j < 4; j++) {
-          const depMoved = await clickDepartureNav('forward');
-          if (!depMoved) break;
-          scrapePriceCells();
-        }
+        // Go back on departure to rescan from the start at this return offset
+        await clickDepartureNav('back');
+        scrapePriceCells();
+        await clickDepartureNav('back');
+        scrapePriceCells();
       }
 
       if (allParsed.length > 0) {
