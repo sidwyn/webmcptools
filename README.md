@@ -20,6 +20,8 @@ This way a company won't over-invest at the start, and the community gets early 
 
 ![WebMCPTools Google Flights demo](media/google-flights-tokyo-demo.gif)
 
+Here's me booking a flight for a friend from Tokyo to San Francisco. It uses a familiar chat interface, BUT plugs into webmcp tools in this repo that are community-contributed. Of course, these tools aren't official, so they tend to run into bugs, but it works well enough, _and_ gives companies a good idea of what works.
+
 https://github.com/sidwyn/webmcp-tool-library/raw/main/media/google-flights-tokyo-demo.mp4
 
 ## Supported Sites
@@ -40,21 +42,21 @@ Since no browser ships this API yet, this extension acts as a polyfill. Each sit
 
 ```js
 registry.register({
-  name: 'search_flights',
-  description: 'Search for flights on Google Flights',
+  name: "search_flights",
+  description: "Search for flights on Google Flights",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      origin: { type: 'string', description: 'Departure airport IATA code' },
-      destination: { type: 'string', description: 'Arrival airport IATA code' },
+      origin: { type: "string", description: "Departure airport IATA code" },
+      destination: { type: "string", description: "Arrival airport IATA code" },
       // ...
     },
-    required: ['origin', 'departureDate']
+    required: ["origin", "departureDate"],
   },
   execute: async (args) => {
     // Interact with the page DOM
-    return { content: [{ type: 'text', text: 'Results loaded.' }] };
-  }
+    return { content: [{ type: "text", text: "Results loaded." }] };
+  },
 });
 ```
 
