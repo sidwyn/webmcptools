@@ -33,6 +33,28 @@ const SITE_MODULES = [
       'content/sites/google-flights/prompt.js',
       'content/sites/google-flights/injector.js'
     ]
+  },
+  {
+    id: 'youtube',
+    defaultUrl: 'https://www.youtube.com',
+    matches: [
+      'https://www.youtube.com/*'
+    ],
+    js: [
+      'content/bridge.js',
+      'content/helpers.js',
+      'content/sites/youtube/helpers.js',
+      'content/sites/youtube/tools/searchVideos.js',
+      'content/sites/youtube/tools/getSearchResults.js',
+      'content/sites/youtube/tools/getVideoInfo.js',
+      'content/sites/youtube/tools/controlPlayback.js',
+      'content/sites/youtube/tools/getTranscript.js',
+      'content/sites/youtube/tools/getComments.js',
+      'content/sites/youtube/tools/getChannelInfo.js',
+      'content/sites/youtube/tools/getRecommendations.js',
+      'content/sites/youtube/prompt.js',
+      'content/sites/youtube/injector.js'
+    ]
   }
 ];
 

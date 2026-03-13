@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readdirSync } from 'fs';
+import { readdirSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { loadTool } from './helpers/loadSource.js';
 
@@ -12,6 +12,8 @@ globalThis.document = {
   body: { innerText: '' }
 };
 globalThis.setTimeout = () => {};
+globalThis.URLSearchParams = URLSearchParams;
+globalThis.URL = URL;
 globalThis.WebMCPHelpers = {
   findByText: () => null,
   findByAriaLabel: () => null,
@@ -20,24 +22,35 @@ globalThis.WebMCPHelpers = {
   waitForGoogleFlightsResults: () => Promise.resolve(true),
   parseGoogleFlightCard: () => ({}),
   setSliderValue: () => {},
+  waitForYouTubeResults: () => Promise.resolve(true),
+  waitForVideoPlayer: () => Promise.resolve(true),
+  getVideoElement: () => null,
+  getYouTubePlayer: () => null,
+  formatDuration: () => '0:00',
+  parseYouTubeVideoRenderer: () => ({}),
 };
 
-const toolDir = join(__dirname, '../content/sites/google-flights/tools');
-const toolFiles = readdirSync(toolDir).filter(f => f.endsWith('.js'));
-const tools = {};
+// Discover all site tool directories
+const sitesDir = join(__dirname, '../content/sites');
+const siteNames = readdirSync(sitesDir).filter(d =>
+  d !== '_template' && existsSync(join(sitesDir, d, 'tools'))
+);
 
-for (const file of toolFiles) {
-  const filePath = join(toolDir, file);
-  // Extract actual const name from file
-  const { readFileSync } = await import('fs');
-  const source = readFileSync(filePath, 'utf-8');
-  const constMatch = source.match(/^const\s+(\w+Tool)\s*=/m);
-  if (constMatch) {
-    try {
-      const tool = loadTool(filePath, constMatch[1]);
-      if (tool) tools[constMatch[1]] = tool;
-    } catch {
-      // Skip tools that can't load without full DOM
+const tools = {};
+for (const site of siteNames) {
+  const toolDir = join(sitesDir, site, 'tools');
+  const toolFiles = readdirSync(toolDir).filter(f => f.endsWith('.js'));
+  for (const file of toolFiles) {
+    const filePath = join(toolDir, file);
+    const source = readFileSync(filePath, 'utf-8');
+    const constMatch = source.match(/^const\s+(\w+Tool)\s*=/m);
+    if (constMatch) {
+      try {
+        const tool = loadTool(filePath, constMatch[1]);
+        if (tool) tools[constMatch[1]] = tool;
+      } catch {
+        // Skip tools that can't load without full DOM
+      }
     }
   }
 }

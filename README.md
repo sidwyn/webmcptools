@@ -12,7 +12,7 @@ Tools should be built by the community:
 
 This way a company won't over-invest at the start, and the community gets early access to awesome agents utilizing the webmcp spec. This beats the chicken-and-egg problem as well.
 
-**Google Flights** is the first site module. More coming soon. Open an issue if you have a suggestion for what else to tackle next.
+**Google Flights** and **YouTube** are the first site modules. More coming soon. Open an issue if you have a suggestion for what else to tackle next.
 
 ---
 
@@ -29,6 +29,7 @@ https://github.com/sidwyn/webmcp-tool-library/raw/main/media/google-flights-toky
 | Site           | Module           | Tools | Description                                                   |
 | -------------- | ---------------- | ----- | ------------------------------------------------------------- |
 | Google Flights | `google-flights` | 14    | Search, filter, sort, compare prices, track, and book flights |
+| YouTube        | `youtube`        | 8     | Search, watch, control playback, transcripts, comments        |
 
 Want to add a site? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -74,13 +75,21 @@ webmcp-tool-library/
 │   ├── bridge.js                          # Generic registry + messaging bridge
 │   ├── helpers.js                         # Generic DOM helpers (sleep, findByText, etc.)
 │   └── sites/
-│       ├── google-flights/                # First site module
+│       ├── google-flights/                # Google Flights module
 │       │   ├── helpers.js                 # Site-specific DOM helpers
 │       │   ├── injector.js                # Tool registration + page context
 │       │   ├── prompt.js                  # AI system prompt fragment
 │       │   └── tools/                     # 14 tool files
 │       │       ├── searchFlights.js
 │       │       ├── getResults.js
+│       │       └── ...
+│       ├── youtube/                       # YouTube module
+│       │   ├── helpers.js
+│       │   ├── injector.js
+│       │   ├── prompt.js
+│       │   └── tools/                     # 8 tool files
+│       │       ├── searchVideos.js
+│       │       ├── controlPlayback.js
 │       │       └── ...
 │       └── _template/                     # Skeleton for new site modules
 ├── sidepanel/
@@ -180,6 +189,21 @@ Keys are stored locally in `chrome.storage.local` and never leave your browser e
 | `explore_destinations`    | All pages    | Browse cheapest destinations on map                       |
 | `search_multi_city`       | All pages    | Multi-city itineraries (2-5 legs)                         |
 | `set_connecting_airports` | Results page | Exclude layover airports                                  |
+
+---
+
+## YouTube Tools
+
+| Tool                 | Available on       | Description                                                |
+| -------------------- | ------------------ | ---------------------------------------------------------- |
+| `search_videos`      | All pages          | Search YouTube for videos by keyword                       |
+| `get_search_results` | Search results     | Read video titles, channels, views from search results     |
+| `get_video_info`     | Video watch page   | Title, channel, views, likes, duration, description        |
+| `control_playback`   | Video watch page   | Play, pause, seek, volume, speed, mute/unmute, fullscreen  |
+| `get_transcript`     | Video watch page   | Read timestamped closed captions                           |
+| `get_comments`       | Video watch page   | Read top comments with author, likes, timestamp            |
+| `get_channel_info`   | Video/channel page | Channel name, subscribers, description                     |
+| `get_recommendations`| All pages          | Related videos (sidebar) or homepage recommendations       |
 
 ---
 

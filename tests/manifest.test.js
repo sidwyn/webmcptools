@@ -19,6 +19,7 @@ describe('manifest.json', () => {
   it('has correct host permissions', () => {
     expect(manifest.host_permissions).toContain('https://www.google.com/travel/flights*');
     expect(manifest.host_permissions).toContain('https://www.google.com/travel/explore*');
+    expect(manifest.host_permissions).toContain('https://www.youtube.com/*');
   });
 
   it('does not have static content_scripts (uses programmatic registration)', () => {
