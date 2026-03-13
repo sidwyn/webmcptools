@@ -11,6 +11,7 @@ const App = (() => {
   let sitePrompt = '';
   let registeredSitePatterns = [];
   let sessionTokens = { input: 0, output: 0, cacheRead: 0, cacheCreate: 0 };
+  let sessionToolTime = 0;
   let userPreferences = {};
 
   // Fun flight-themed status messages mapped to tool names
@@ -360,15 +361,22 @@ const App = (() => {
 
   function updateTokenDisplay() {
     const total = sessionTokens.input + sessionTokens.output + sessionTokens.cacheRead + sessionTokens.cacheCreate;
-    if (total === 0) {
+    if (total === 0 && sessionToolTime === 0) {
       tokenDisplay.textContent = '';
       return;
     }
-    const cached = sessionTokens.cacheRead;
-    const parts = [`${formatTokenCount(total)} tokens`];
-    if (cached > 0) {
-      const pct = Math.round(cached / (sessionTokens.input + sessionTokens.cacheRead + sessionTokens.cacheCreate) * 100);
-      parts.push(`${pct}% cached`);
+    const parts = [];
+    if (total > 0) {
+      parts.push(`${formatTokenCount(total)} tokens`);
+      const cached = sessionTokens.cacheRead;
+      if (cached > 0) {
+        const pct = Math.round(cached / (sessionTokens.input + sessionTokens.cacheRead + sessionTokens.cacheCreate) * 100);
+        parts.push(`${pct}% cached`);
+      }
+    }
+    if (sessionToolTime > 0) {
+      const secs = (sessionToolTime / 1000).toFixed(1).replace(/\.0$/, '');
+      parts.push(`${secs}s in tools`);
     }
     tokenDisplay.textContent = parts.join(' · ');
   }
@@ -437,6 +445,7 @@ const App = (() => {
   function startNewChat() {
     conversationHistory = [];
     sessionTokens = { input: 0, output: 0, cacheRead: 0, cacheCreate: 0 };
+    sessionToolTime = 0;
     updateTokenDisplay();
     saveConversation();
 
@@ -926,6 +935,7 @@ const App = (() => {
         setFunStatus(toolName);
 
         let result;
+        const toolStart = Date.now();
         try {
           result = await executeToolViaContentScript(toolName, args, targetTabId);
           updateToolCallCard(card, { args, result });
@@ -933,6 +943,8 @@ const App = (() => {
           updateToolCallCard(card, { args, result: null, error: e.message });
           result = { content: [{ type: 'text', text: `ERROR: ${e.message}` }] };
         }
+        sessionToolTime += Date.now() - toolStart;
+        updateTokenDisplay();
 
         // Cap tool result size before adding to history to control token usage
         const cappedResult = capToolResult(result, 1500);
