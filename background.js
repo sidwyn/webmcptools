@@ -33,6 +33,32 @@ const SITE_MODULES = [
       'content/sites/google-flights/prompt.js',
       'content/sites/google-flights/injector.js'
     ]
+  },
+  {
+    id: 'amazon',
+    defaultUrl: 'https://www.amazon.com/',
+    matches: [
+      'https://www.amazon.com/*'
+    ],
+    js: [
+      'content/bridge.js',
+      'content/helpers.js',
+      'content/sites/amazon/helpers.js',
+      'content/sites/amazon/tools/searchProducts.js',
+      'content/sites/amazon/tools/getResults.js',
+      'content/sites/amazon/tools/setFilters.js',
+      'content/sites/amazon/tools/sortResults.js',
+      'content/sites/amazon/tools/getProductDetails.js',
+      'content/sites/amazon/tools/getReviews.js',
+      'content/sites/amazon/tools/checkPriceHistory.js',
+      'content/sites/amazon/tools/addToCart.js',
+      'content/sites/amazon/tools/buyNow.js',
+      'content/sites/amazon/tools/getCart.js',
+      'content/sites/amazon/tools/compareProducts.js',
+      'content/sites/amazon/tools/getCheckoutSummary.js',
+      'content/sites/amazon/prompt.js',
+      'content/sites/amazon/injector.js'
+    ]
   }
 ];
 
