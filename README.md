@@ -1,6 +1,6 @@
 # WebMCPTools
 
-An open-source Chrome extension platform that injects [WebMCP](https://github.com/anthropics/webmcp) tools into websites. Each supported site is a self-contained module, and community contributors can add new sites without touching the core.
+An open-source Chrome extension platform that injects [WebMCP](https://github.com/webmachinelearning/webmcp) tools into websites. Each supported site is a self-contained module, and community contributors can add new sites without touching the core.
 
 This heavily leans on the [webmcp](https://github.com/webmachinelearning/webmcp) repository and webmcp definitions.
 
