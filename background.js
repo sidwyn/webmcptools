@@ -129,6 +129,28 @@ const SITE_MODULES = [
       'content/sites/target/prompt.js',
       'content/sites/target/injector.js'
     ]
+  },
+  {
+    id: 'google-docs',
+    defaultUrl: 'https://docs.google.com/',
+    matches: [
+      'https://docs.google.com/document/*'
+    ],
+    js: [
+      'content/bridge.js',
+      'content/helpers.js',
+      'content/sites/google-docs/helpers.js',
+      'content/sites/google-docs/tools/getDocument.js',
+      'content/sites/google-docs/tools/insertText.js',
+      'content/sites/google-docs/tools/replaceText.js',
+      'content/sites/google-docs/tools/formatText.js',
+      'content/sites/google-docs/tools/setHeading.js',
+      'content/sites/google-docs/tools/createList.js',
+      'content/sites/google-docs/tools/getFormatting.js',
+      'content/sites/google-docs/tools/renameDocument.js',
+      'content/sites/google-docs/prompt.js',
+      'content/sites/google-docs/injector.js'
+    ]
   }
 ];
 
