@@ -12,7 +12,7 @@ Tools should be built by the community:
 
 This way a company won't over-invest at the start, and the community gets early access to awesome agents utilizing the webmcp spec. This beats the chicken-and-egg problem as well.
 
-**Google Flights**, **Google Hotels**, **Amazon**, **Walmart**, and **Target** are the five site modules. Open an issue if you have a suggestion for what else to tackle next.
+**Google Flights**, **Google Hotels**, **Amazon**, **Walmart**, **Target**, and **Google Docs** are the six site modules. Open an issue if you have a suggestion for what else to tackle next.
 
 ---
 
@@ -33,6 +33,7 @@ https://github.com/sidwyn/webmcp-tool-library/raw/main/media/google-flights-toky
 | Amazon         | `amazon`         | 12    | Search, filter, sort, compare, read reviews, add to cart, buy now, check prices |
 | Walmart        | `walmart`        | 7     | Search, filter, sort, view details, add to cart, view cart |
 | Target         | `target`         | 9     | Search, filter, sort, view details, add to cart, find deals, check store availability |
+| Google Docs    | `google-docs`    | 8     | Read, insert, replace, format, set headings, create lists, rename documents |
 
 Want to add a site? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -103,6 +104,11 @@ webmcp-tool-library/
 │       │   ├── injector.js
 │       │   ├── prompt.js
 │       │   └── tools/                     # 9 tool files
+│       ├── google-docs/                   # Google Docs editing module (8 tools)
+│       │   ├── helpers.js
+│       │   ├── injector.js
+│       │   ├── prompt.js
+│       │   └── tools/                     # 8 tool files
 │       └── _template/                     # Skeleton for new site modules
 ├── sidepanel/
 │   ├── index.html
@@ -198,6 +204,17 @@ Adding a new site = one entry in `SITE_MODULES` + one folder under `content/site
 - **Store availability** — check pickup, shipping, and delivery by ZIP code
 - **Deal finder** — Circle offers, sale badges, promo badges
 - **Cart management** — add to cart with color/size/quantity options
+
+### Google Docs Module
+
+- **Document reading** — read full text content via export endpoint
+- **Text insertion** — insert text at cursor position via clipboard paste
+- **Find & Replace** — find and replace text using the native dialog
+- **Rich formatting** — bold, italic, underline, strikethrough via toolbar
+- **Heading styles** — set Normal text or Heading 1-6 via Styles dropdown
+- **List creation** — numbered, bulleted, or checklist via toolbar
+- **Format inspection** — read current style, font, size, and toggle states
+- **Document renaming** — change the document title
 
 ---
 
@@ -300,6 +317,19 @@ Keys are stored locally in `chrome.storage.local` and never leave your browser e
 | `get_deals`                | All pages        | Find deals, Circle offers, and sale badges on current page     |
 | `check_store_availability` | Product page     | Check in-store pickup, shipping, and delivery by ZIP code      |
 
+## Google Docs Tools
+
+| Tool                | Available on     | Description                                                    |
+| ------------------- | ---------------- | -------------------------------------------------------------- |
+| `get_document`      | Document page    | Read the full text content and title of the document           |
+| `insert_text`       | Document page    | Insert text at the current cursor position via clipboard paste |
+| `replace_text`      | Document page    | Find and replace text using the Find & Replace dialog          |
+| `format_text`       | Document page    | Toggle bold, italic, underline, or strikethrough               |
+| `set_heading`       | Document page    | Set heading level (Normal text, Heading 1-6) via Styles dropdown |
+| `create_list`       | Document page    | Create numbered, bulleted, or checklist                        |
+| `get_formatting`    | Document page    | Read current style, font, size, bold/italic/underline state    |
+| `rename_document`   | Document page    | Change the document title                                      |
+
 ---
 
 ## Development
@@ -333,6 +363,6 @@ MIT — see [LICENSE](LICENSE)
 
 <!-- LAST_UPDATED -->
 
-_Last updated: 2026-03-14_
+_Last updated: 2026-05-12_
 
 <!-- /LAST_UPDATED -->

@@ -90,45 +90,67 @@ WebMCPHelpers.parseAmazonStarRating = function(element) {
   return null;
 };
 
+WebMCPHelpers.AMAZON_PARSER_KEY = 'amazon.searchResults';
+
+WebMCPHelpers._amazonBaselines = {
+  title: (c) => {
+    const el = c.querySelector('h2 a span') || c.querySelector('h2 span') || c.querySelector('[data-cy="title-recipe"] span');
+    return el ? el.textContent.trim() : null;
+  },
+  url: (c) => {
+    const h2 = c.querySelector('h2');
+    const link = (h2 && h2.closest('a')) || c.querySelector('h2 a') || c.querySelector('a.a-link-normal[href*="/dp/"]');
+    return link ? link.getAttribute('href') : null;
+  },
+  price: (c) => {
+    const el = c.querySelector('.a-price:not([data-a-strike])') || c.querySelector('[data-cy="price-recipe"] .a-price');
+    return WebMCPHelpers.parseAmazonPrice(el);
+  },
+  originalPrice: (c) => {
+    const el = c.querySelector('.a-price[data-a-strike]') || c.querySelector('.a-text-price[data-a-strike]');
+    return WebMCPHelpers.parseAmazonPrice(el);
+  },
+  rating: (c) => {
+    const el = c.querySelector('[aria-label*="out of 5"]') || c.querySelector('[class*="a-star"]');
+    return WebMCPHelpers.parseAmazonStarRating(el);
+  },
+  reviewCount: (c) => {
+    const el = c.querySelector('[aria-label*="stars"] + span') ||
+               c.querySelector('a[href*="customerReviews"] span') ||
+               c.querySelector('[data-cy="reviews-block"] span.a-size-base');
+    if (!el) return null;
+    const text = el.textContent.trim();
+    const kMatch = text.match(/([\d.]+)K/i);
+    if (kMatch) return Math.round(parseFloat(kMatch[1]) * 1000);
+    const numMatch = text.replace(/[,\s()]/g, '').match(/(\d+)/);
+    return numMatch ? parseInt(numMatch[1], 10) : null;
+  },
+  delivery: (c) => {
+    const el = c.querySelector('[data-cy="delivery-recipe"]') ||
+               c.querySelector('.s-align-children-center span[aria-label*="delivery"]');
+    return el ? el.textContent.trim().substring(0, 80) : null;
+  }
+};
+
 WebMCPHelpers.parseAmazonProductCard = function(card, rank) {
   const asin = card.getAttribute('data-asin');
   if (!asin) return null;
 
-  const titleEl = card.querySelector('h2 a span') ||
-                   card.querySelector('h2 span') ||
-                   card.querySelector('[data-cy="title-recipe"] span');
-  const title = titleEl ? titleEl.textContent.trim() : null;
+  const learning = (typeof window !== 'undefined' && window.WebMCPLearning) ? window.WebMCPLearning : null;
+  const baselines = WebMCPHelpers._amazonBaselines;
+  const key = WebMCPHelpers.AMAZON_PARSER_KEY;
 
-  const h2El = card.querySelector('h2');
-  const linkEl = (h2El && h2El.closest('a')) || card.querySelector('h2 a') || card.querySelector('a.a-link-normal[href*="/dp/"]');
-  const url = linkEl ? linkEl.getAttribute('href') : null;
+  const resolve = (field) => learning
+    ? learning.resolveField(card, key, field, baselines[field])
+    : baselines[field](card);
 
-  const priceEl = card.querySelector('.a-price:not([data-a-strike])') ||
-                  card.querySelector('[data-cy="price-recipe"] .a-price');
-  const price = WebMCPHelpers.parseAmazonPrice(priceEl);
-
-  const origPriceEl = card.querySelector('.a-price[data-a-strike]') ||
-                      card.querySelector('.a-text-price[data-a-strike]');
-  const originalPrice = WebMCPHelpers.parseAmazonPrice(origPriceEl);
-
-  const ratingEl = card.querySelector('[aria-label*="out of 5"]') ||
-                   card.querySelector('[class*="a-star"]');
-  const rating = WebMCPHelpers.parseAmazonStarRating(ratingEl);
-
-  const reviewEl = card.querySelector('[aria-label*="stars"] + span') ||
-                   card.querySelector('a[href*="customerReviews"] span') ||
-                   card.querySelector('[data-cy="reviews-block"] span.a-size-base');
-  let reviewCount = null;
-  if (reviewEl) {
-    const reviewText = reviewEl.textContent.trim();
-    const kMatch = reviewText.match(/([\d.]+)K/i);
-    if (kMatch) {
-      reviewCount = Math.round(parseFloat(kMatch[1]) * 1000);
-    } else {
-      const numMatch = reviewText.replace(/[,\s()]/g, '').match(/(\d+)/);
-      if (numMatch) reviewCount = parseInt(numMatch[1], 10);
-    }
-  }
+  const title = resolve('title');
+  const url = resolve('url');
+  const price = resolve('price');
+  const originalPrice = resolve('originalPrice');
+  const rating = resolve('rating');
+  const reviewCount = resolve('reviewCount');
+  const delivery = resolve('delivery');
 
   const isPrime = card.querySelector('[aria-label="Amazon Prime"]') !== null ||
                   card.querySelector('[aria-label="Prime"]') !== null ||
@@ -137,10 +159,6 @@ WebMCPHelpers.parseAmazonProductCard = function(card, rank) {
 
   const isSponsored = card.querySelector('.puis-label-popover-default') !== null ||
                       card.textContent.includes('Sponsored');
-
-  const deliveryEl = card.querySelector('[data-cy="delivery-recipe"]') ||
-                     card.querySelector('.s-align-children-center span[aria-label*="delivery"]');
-  const delivery = deliveryEl ? deliveryEl.textContent.trim().substring(0, 80) : null;
 
   return { rank, asin, title, price, originalPrice, rating, reviewCount, isPrime, isSponsored, delivery, url };
 };

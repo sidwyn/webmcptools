@@ -1,5 +1,7 @@
 // background.js — Service worker, registers side panel behavior and site modules
 
+try { importScripts('background/learning.js'); } catch (e) { console.error('learning import failed', e); }
+
 // ── Site Module Registry ──────────────────────────────────────────────────────
 // Each entry defines a supported site. Adding a new site = adding one entry here
 // + a new folder under content/sites/.
@@ -15,6 +17,10 @@ const SITE_MODULES = [
     js: [
       'content/bridge.js',
       'content/helpers.js',
+      'content/learning/adapter.js',
+      'content/learning/snapshot.js',
+      'content/learning/gate.js',
+      'content/learning/shadow.js',
       'content/sites/google-flights/helpers.js',
       'content/sites/google-flights/tools/searchFlights.js',
       'content/sites/google-flights/tools/getResults.js',
@@ -44,6 +50,10 @@ const SITE_MODULES = [
     js: [
       'content/bridge.js',
       'content/helpers.js',
+      'content/learning/adapter.js',
+      'content/learning/snapshot.js',
+      'content/learning/gate.js',
+      'content/learning/shadow.js',
       'content/sites/google-hotels/helpers.js',
       'content/sites/google-hotels/tools/searchHotels.js',
       'content/sites/google-hotels/tools/getResults.js',
@@ -69,6 +79,10 @@ const SITE_MODULES = [
     js: [
       'content/bridge.js',
       'content/helpers.js',
+      'content/learning/adapter.js',
+      'content/learning/snapshot.js',
+      'content/learning/gate.js',
+      'content/learning/shadow.js',
       'content/sites/amazon/helpers.js',
       'content/sites/amazon/tools/searchProducts.js',
       'content/sites/amazon/tools/getResults.js',
@@ -95,6 +109,10 @@ const SITE_MODULES = [
     js: [
       'content/bridge.js',
       'content/helpers.js',
+      'content/learning/adapter.js',
+      'content/learning/snapshot.js',
+      'content/learning/gate.js',
+      'content/learning/shadow.js',
       'content/sites/walmart/helpers.js',
       'content/sites/walmart/tools/searchProducts.js',
       'content/sites/walmart/tools/getResults.js',
@@ -116,6 +134,10 @@ const SITE_MODULES = [
     js: [
       'content/bridge.js',
       'content/helpers.js',
+      'content/learning/adapter.js',
+      'content/learning/snapshot.js',
+      'content/learning/gate.js',
+      'content/learning/shadow.js',
       'content/sites/target/helpers.js',
       'content/sites/target/tools/searchProducts.js',
       'content/sites/target/tools/getSearchResults.js',
@@ -128,6 +150,32 @@ const SITE_MODULES = [
       'content/sites/target/tools/checkStoreAvailability.js',
       'content/sites/target/prompt.js',
       'content/sites/target/injector.js'
+    ]
+  },
+  {
+    id: 'google-docs',
+    defaultUrl: 'https://docs.google.com/',
+    matches: [
+      'https://docs.google.com/document/*'
+    ],
+    js: [
+      'content/bridge.js',
+      'content/helpers.js',
+      'content/learning/adapter.js',
+      'content/learning/snapshot.js',
+      'content/learning/gate.js',
+      'content/learning/shadow.js',
+      'content/sites/google-docs/helpers.js',
+      'content/sites/google-docs/tools/getDocument.js',
+      'content/sites/google-docs/tools/insertText.js',
+      'content/sites/google-docs/tools/replaceText.js',
+      'content/sites/google-docs/tools/formatText.js',
+      'content/sites/google-docs/tools/setHeading.js',
+      'content/sites/google-docs/tools/createList.js',
+      'content/sites/google-docs/tools/getFormatting.js',
+      'content/sites/google-docs/tools/renameDocument.js',
+      'content/sites/google-docs/prompt.js',
+      'content/sites/google-docs/injector.js'
     ]
   }
 ];
@@ -158,6 +206,8 @@ async function registerContentScripts() {
 
 chrome.runtime.onInstalled.addListener(registerContentScripts);
 chrome.runtime.onStartup.addListener(registerContentScripts);
+
+if (typeof LEARNING !== 'undefined') LEARNING.init();
 
 // ── Side Panel ────────────────────────────────────────────────────────────────
 

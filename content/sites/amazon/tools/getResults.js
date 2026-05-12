@@ -35,6 +35,23 @@ const GetResultsTool = {
     const limited = cards.slice(0, maxResults);
     const results = limited.map((card, i) => WebMCPHelpers.parseAmazonProductCard(card, i + 1)).filter(Boolean);
 
+    const presentCount = document.querySelectorAll('[data-component-type="s-search-result"][data-asin]').length;
+    if (window.WebMCPGate) {
+      window.WebMCPGate.observe(WebMCPHelpers.AMAZON_PARSER_KEY, {
+        results,
+        cardCount: results.length,
+        presentCount,
+        requiredFields: ['title', 'price'],
+        sampleCard: limited[0],
+        rootSelector: '.s-main-slot',
+        cardSelector: '[data-component-type="s-search-result"][data-asin]',
+        siteId: 'amazon'
+      });
+    }
+    if (window.WebMCPShadow) {
+      window.WebMCPShadow.shadowMap(WebMCPHelpers.AMAZON_PARSER_KEY, limited, results, ['title', 'price']);
+    }
+
     const summary = results.map(r => {
       const parts = [`${r.rank}.`];
       if (r.isSponsored) parts.push('[Sponsored]');

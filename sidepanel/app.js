@@ -53,6 +53,15 @@ const App = (() => {
     get_cart_summary: ['Checking the cart', 'Reviewing your basket', 'Tallying items'],
     get_deals: ['Hunting for deals', 'Scanning Circle offers', 'Finding markdowns'],
     check_store_availability: ['Checking local stock', 'Scanning nearby stores', 'Verifying availability'],
+    // Google Docs
+    get_document: ['Reading the document', 'Scanning the page', 'Loading content'],
+    insert_text: ['Typing away', 'Inserting text', 'Writing content'],
+    replace_text: ['Finding and replacing', 'Editing the text', 'Making changes'],
+    format_text: ['Styling the text', 'Applying formatting', 'Polishing the look'],
+    set_heading: ['Setting the heading', 'Structuring the doc', 'Applying style'],
+    create_list: ['Creating a list', 'Adding bullets', 'Organizing items'],
+    get_formatting: ['Checking the style', 'Reading the format', 'Inspecting the toolbar'],
+    rename_document: ['Renaming the doc', 'Updating the title', 'Changing the name'],
     _default: ['Working on it', 'Crunching the numbers', 'Fetching data', 'Processing', 'Almost there']
   };
 
@@ -108,6 +117,16 @@ const App = (() => {
         'Search for kids\' toys with 4+ star ratings'
       ]
     },
+    'google-docs': {
+      title: 'Google Docs',
+      description: 'I can read, edit, format, and restructure your document.',
+      prompts: [
+        'What does this document say?',
+        'Fix any typos in the document',
+        'Make the title a Heading 1',
+        'Add a bullet list of action items at the end'
+      ]
+    },
     _default: {
       title: 'WebMCPTools',
       description: 'I can interact with supported websites for you. Navigate to a supported site and start chatting.',
@@ -127,6 +146,7 @@ const App = (() => {
     if (url.includes('amazon.com')) return 'amazon';
     if (url.includes('walmart.com')) return 'walmart';
     if (url.includes('target.com')) return 'target';
+    if (url.includes('docs.google.com/document')) return 'google-docs';
     return null;
   }
 
